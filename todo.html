@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>To-Do List App</title>
+<style>
+  :root{--bg:#f2f6fa;--card:#fff;--ink:#13213c;--muted:#53627c;--accent:#2d5be3;--line:#d5deea}
+  @media (prefers-color-scheme:dark){:root{--bg:#0e1626;--card:#16223a;--ink:#e8eefb;--muted:#9fb0cc;--accent:#7ea2ff;--line:#26365a}}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:1.05rem/1.5 system-ui,sans-serif;display:grid;place-items:start center;padding:2rem 1rem}
+  main{width:100%;max-width:480px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1.5rem}
+  h1{margin:0 0 .2rem}
+  .count{color:var(--muted);margin:0 0 1rem}
+  form{display:flex;gap:.5rem;margin-bottom:1rem}
+  input[type=text]{flex:1;font:inherit;padding:.6rem;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+  button{font:inherit;cursor:pointer;border:0;border-radius:6px;padding:.6rem .9rem;background:var(--accent);color:#fff}
+  ul{list-style:none;margin:0;padding:0}
+  li{display:flex;align-items:center;gap:.6rem;padding:.6rem 0;border-bottom:1px solid var(--line)}
+  li span{flex:1}
+  li.done span{text-decoration:line-through;color:var(--muted)}
+  li button{background:transparent;color:#d6455d;padding:.2rem .5rem}
+  .empty{color:var(--muted)}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+  <h1>To-Do List</h1>
+  <p class="count" id="count"></p>
+  <form id="form">
+    <input id="task" type="text" placeholder="Add a task" aria-label="New task" required>
+    <button type="submit">Add</button>
+  </form>
+  <ul id="list"></ul>
+  <p><a href="index.html">Back to my portfolio</a></p>
+</main>
+<script>
+  // Tasks are stored as an array of {text, done} objects
+  let tasks = [];
+  try { tasks = JSON.parse(localStorage.getItem('tasks')) || []; } catch (e) {}
+
+  const list = document.getElementById('list');
+  const count = document.getElementById('count');
+
+  function save() {
+    try { localStorage.setItem('tasks', JSON.stringify(tasks)); } catch (e) {}
+  }
+
+  function render() {
+    list.innerHTML = '';
+    if (tasks.length === 0) {
+      list.innerHTML = '<li class="empty">No tasks yet. Add one above.</li>';
+    }
+    tasks.forEach((t, i) => {
+      const li = document.createElement('li');
+      if (t.done) li.className = 'done';
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      box.checked = t.done;
+      box.setAttribute('aria-label', 'Mark as done');
+      box.onchange = () => { t.done = box.checked; save(); render(); };
+      const label = document.createElement('span');
+      label.textContent = t.text;   // textContent keeps user input safe
+      const del = document.createElement('button');
+      del.textContent = 'Delete';
+      del.onclick = () => { tasks.splice(i, 1); save(); render(); };
+      li.append(box, label, del);
+      list.appendChild(li);
+    });
+    const left = tasks.filter(t => !t.done).length;
+    count.textContent = left + ' of ' + tasks.length + ' tasks left';
+  }
+
+  document.getElementById('form').addEventListener('submit', e => {
+    e.preventDefault();
+    const input = document.getElementById('task');
+    const text = input.value.trim();
+    if (!text) return;
+    tasks.push({ text: text, done: false });
+    input.value = '';
+    save(); render();
+  });
+
+  render();
+</script>
+</body>
+</html>
